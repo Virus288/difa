@@ -23,7 +23,7 @@
       "incremental": true,
       "inlineSources": false,
       "inlineSourceMap": false,
-      "isolatedDeclarations": false,
+      "isolatedDeclarations": true,
       "isolatedModules": true,
       "lib": [
         "ES6",
@@ -67,7 +67,7 @@
       "types": ["node"],
       "useDefineForClassFields": true,
       "useUnknownInCatchVariables": true,
-      "verbatimModuleSyntax": false
+      "verbatimModuleSyntax": true
     },
     "exclude": ["node_modules", "lib", "eslint.config.mjs"],
     "include": [ "src/**/*.ts" ]

@@ -1,8 +1,8 @@
 import Log from 'simpl-loggar';
-import { ERouteType } from '../enums';
-import { ServerNotInitializedError } from '../errors';
-import type AbstractRouter from './abstract/router';
-import type { IRoute } from './types.js';
+import { ERouteType } from '../enums/index.js';
+import { ServerNotInitializedError } from '../errors/index.js';
+import type AbstractRouter from './abstract/router.js';
+import type { IAsyncRoute, IRoute } from '../../types/index.js';
 import type express from 'express';
 
 export default class Routes {
@@ -16,25 +16,28 @@ export default class Routes {
     this._app = val;
   }
 
-  static Post<This>(path: string, service: AbstractRouter): IRoute<This> {
-    return Routes.createRoute<This>(ERouteType.POST, path, service);
+  static Post<This, T>(path: string, service: AbstractRouter): IRoute<This, T> {
+    return Routes.createRoute<This, T>(ERouteType.POST, path, service);
   }
 
-  static Get<This>(path: string, service: AbstractRouter): IRoute<This> {
-    return Routes.createRoute<This>(ERouteType.GET, path, service);
+  static Get<This, T>(path: string, service: AbstractRouter): IRoute<This, T> {
+    return Routes.createRoute<This, T>(ERouteType.GET, path, service);
   }
 
-  static Put<This>(path: string, service: AbstractRouter): IRoute<This> {
-    return Routes.createRoute<This>(ERouteType.PUT, path, service);
+  static Put<This, T>(path: string, service: AbstractRouter): IRoute<This, T> {
+    return Routes.createRoute<This, T>(ERouteType.PUT, path, service);
   }
 
-  static Patch<This>(path: string, service: AbstractRouter): IRoute<This> {
-    return Routes.createRoute<This>(ERouteType.PATCH, path, service);
+  static Patch<This, T>(path: string, service: AbstractRouter): IRoute<This, T> {
+    return Routes.createRoute<This, T>(ERouteType.PATCH, path, service);
   }
 
-  static Delete<This>(path: string, service: AbstractRouter): IRoute<This> {
-    return Routes.createRoute<This>(ERouteType.DELETE, path, service);
+  static Delete<This, T>(path: string, service: AbstractRouter): IRoute<This, T> {
+    return Routes.createRoute<This, T>(ERouteType.DELETE, path, service);
   }
+
+  private static createRoute<This, T>(type: ERouteType, path: string, service: AbstractRouter): IRoute<This, T>;
+  private static createRoute<This, T>(type: ERouteType, path: string, service: AbstractRouter): IAsyncRoute<This, T>;
 
   /**
    * @internal
@@ -42,26 +45,39 @@ export default class Routes {
    * @param path Path that endpoint will use.
    * @param service Type of service to call.
    */
-  private static createRoute<This>(type: ERouteType, path: string, service: AbstractRouter): IRoute<This> {
+  private static createRoute<This, T>(type: ERouteType, path: string, service: AbstractRouter): IRoute<This, T> {
     return function (
       target: (
         this: This,
         req: express.Request,
         res: express.Response,
         service: AbstractRouter,
-      ) => void | Promise<void>,
+        next?: express.NextFunction,
+      ) => T,
       _context: ClassMethodDecoratorContext<
         This,
-        (this: This, req: express.Request, res: express.Response) => void | Promise<void>
+        (
+          this: This,
+          req: express.Request,
+          res: express.Response,
+          service: AbstractRouter,
+          next?: express.NextFunction,
+        ) => T
       >,
-    ): void | Promise<void> {
+    ): undefined | (() => T) {
       Log.debug('Routes', `Creating ${type} endpoint for path ${path}`);
       if (!Routes.app) throw new ServerNotInitializedError();
 
-      Routes.app[type](path, async (req: express.Request, res: express.Response) => {
+      Routes.app[type](path, async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         const instance = new (_context.constructor as { new (): This })();
-        await target.call(instance, req, res, service);
+        const output = target.call(instance, req, res, service, next);
+
+        if (output instanceof Promise) {
+          await output;
+        }
       });
+
+      return undefined;
     };
   }
 
@@ -69,7 +85,7 @@ export default class Routes {
    * @internal
    * @param app
    */
-  createRoutes(app: express.Express): void {
+  static createRoutes(app: express.Express): void {
     if (Routes.app) Log.warn('Routes', 'Routes already is initialized. Reinitializing');
     Routes.app = app;
   }
