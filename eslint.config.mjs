@@ -35,7 +35,7 @@ export default [
     ),
   ).map((config) => ({
     ...config,
-    files: ['src/**/*.ts', 'src/**/**.*.json'],
+    files: ['src/**/*.ts', 'src/**/**.*.json', 'types/**/**.ts'],
   })),
   {
     ignores: ['lib', '*.js', 'eslint.config.mjs'],

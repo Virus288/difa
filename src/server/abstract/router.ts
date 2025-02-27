@@ -1,9 +1,6 @@
 import express from 'express';
 
-/**
- * @internal
- */
-export default abstract class AbstractRouter {
+export default abstract class AbstractRouter<T = unknown> {
   readonly _router: express.Router;
 
   constructor() {
@@ -14,5 +11,5 @@ export default abstract class AbstractRouter {
     return this._router;
   }
 
-  abstract execute(): Promise<unknown>;
+  abstract execute(): T | Promise<T>;
 }
