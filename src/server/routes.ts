@@ -54,7 +54,7 @@ export default class Routes {
         service: AbstractRouter,
         next?: express.NextFunction,
       ) => T,
-      _context: ClassMethodDecoratorContext<
+      context: ClassMethodDecoratorContext<
         This,
         (
           this: This,
@@ -69,7 +69,7 @@ export default class Routes {
       if (!Routes.app) throw new ServerNotInitializedError();
 
       Routes.app[type](path, async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        const instance = new (_context.constructor as { new (): This })();
+        const instance = new (context.constructor as { new (): This })();
         const output = target.call(instance, req, res, service, next);
 
         if (output instanceof Promise) {

@@ -12,7 +12,7 @@ export type IRoute<This, T> = (
     service: AbstractRouter,
     next?: express.NextFunction,
   ) => T,
-  _context: ClassMethodDecoratorContext<
+  context: ClassMethodDecoratorContext<
     This,
     (this: This, req: express.Request, res: express.Response, service: AbstractRouter) => T
   >,
@@ -26,7 +26,7 @@ export type IAsyncRoute<This, T> = (
     service: AbstractRouter,
     next?: express.NextFunction,
   ) => Promise<T>,
-  _context: ClassMethodDecoratorContext<
+  context: ClassMethodDecoratorContext<
     This,
     (this: This, req: express.Request, res: express.Response, service: AbstractRouter) => Promise<T>
   >,
